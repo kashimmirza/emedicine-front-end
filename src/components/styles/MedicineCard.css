@@ -1,0 +1,71 @@
+.medicine-card {
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+    padding: 16px;
+    text-align: center;
+}
+
+.discount-tag {
+    background-color: red;
+    color: white;
+    font-weight: bold;
+    padding: 5px;
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    border-radius: 5px;
+}
+
+.medicine-image {
+    max-width: 100%;
+    height: auto;
+}
+
+.medicine-info {
+    margin-top: 10px;
+}
+
+.medicine-name {
+    font-weight: bold;
+    color: black;
+}
+
+.medicine-ingredient {
+    color: lightgreen;
+}
+
+.medicine-company {
+    color: grey;
+    margin: 10px 0;
+}
+
+.medicine-price {
+    font-weight: bold;
+}
+
+.old-price {
+    text-decoration: line-through;
+    color: grey;
+    margin-right: 10px;
+}
+
+.new-price {
+    color: black;
+}
+
+.add-to-cart {
+    background-color: green;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    margin-top: 10px;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+.add-to-cart:hover {
+    background-color: darkgreen;
+}
