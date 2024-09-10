@@ -9,6 +9,7 @@ import { Carousel } from "react-responsive-carousel";
 import "react-responsive-carousel/lib/styles/carousel.min.css";
 import { useNavigate } from "react-router-dom";
 import CartPopover from "./user/Cart.js";
+import CloseIcon from "@mui/icons-material/Close";
 import {
  TextField,
  Typography,
@@ -36,16 +37,27 @@ const Home = () => {
  const [anchorEl, setAnchorEl] = useState(null);
  const [showPopover, setShowPopover] = useState(false);
  const [showCartPopover, setShowCartPopover] = useState(false);
+ const [phoneNumber, setPhoneNumber] = useState("");
+ const [selectedCode, setSelectedCode] = useState("+880");
+ const [otp, setOtp] = useState(false);
+ const [otpSent, setOtpSent] = useState(false);
+ const [otpVerified, setOtpVerified] = useState(false);
+ const [timer, setTimer] = useState(60);
+ const [resendDisabled, setResendDisabled] = useState(false);
+ const [attempts, setAttempts] = useState(0);
+
  const handleCartClick = () => {
   setShowCartPopover(!showCartPopover);
  };
  const handleShowPopover = (event) => {
   setAnchorEl(event.currentTarget);
+  setShowPopover(true);
  };
 
  // Close modal
  const handleClosePopover = () => {
   setAnchorEl(null);
+  setShowPopover(false);
  };
  const open = Boolean(anchorEl);
  const id = open ? "Cart-popover" : undefined;
@@ -93,6 +105,66 @@ const Home = () => {
    return () => clearInterval(intervalId);
   }
  }, [isAnimating]);
+
+ useEffect(() => {
+  if (otpSent && timer > 0) {
+   const interval = setInterval(() => {
+    setTimer((prevTimer) => prevTimer - 1);
+   }, 100);
+   return () => clearInterval(interval);
+  }
+ }, [otpSent, timer]);
+
+ const handleSentOTP = () => {
+  if (phoneNumber.trim() === "") {
+   alert("please enter a valid phone number.");
+   return;
+  }
+  if (attempts >= 3) {
+   alert("you've exceeded the maximum attempts. please try again later.");
+   return;
+  }
+  setOtpSent(true);
+  setResendDisabled(true);
+  setTimer(60);
+  setAttempts((prev) => prev + 1);
+  fetch("/api/OTP/send", {
+   method: "POST",
+   headers: {
+    "Content-Type": "application/json",
+   },
+   body: JSON.stringify({ phoneNumber: `${selectedCode}${phoneNumber}` }),
+  })
+   .then((response) => response.json())
+   .then((data) => {
+    console.log(data);
+    alert(data.message);
+   })
+   .catch((error) => console.error("Error:", error));
+ };
+
+ const handleVerifyOTP = () => {
+  fetch("/api/OTP/verify", {
+   method: "POST",
+   headers: {
+    "Content-Type": "application/json",
+   },
+   body: JSON.stringify({ phoneNumber: `${selectedCode}${phoneNumber}`, otp }),
+  })
+   .then((response) => response.json())
+   .then((data) => {
+    if (data.message === "OTP verified successfully.") {
+     setOtpVerified(true);
+    } else {
+     alert(data.message);
+    }
+   })
+   .catch((error) => console.error("Error:", error));
+ };
+ const handleResendOTP = () => {
+  if (resendDisabled) return;
+  handleResendOTP();
+ };
 
  // Stop animation and allow typing when user interacts with the search box
  const handleFocus = () => {
@@ -156,26 +228,35 @@ const Home = () => {
       onClick={handleShowPopover} // Trigger showing/hiding the cart popover
       style={{ cursor: "pointer" }}
      />
-    </div>
 
-    <FaShoppingCart size={30} />
+     <FaShoppingCart size={30} />
+    </div>
 
     <Popover
      id={id}
-     open={open}
-     anchorEl={anchorEl}
+     open={true}
+     onclose={() => {}}
+     anchorOrin={{
+      vertical: "bottom",
+      horizontal: "center",
+     }}
+     /*anchorEl={anchorEl}
      onClose={handleClosePopover}
      anchorOrigin={{
       vertical: "bottom",
       horizontal: "center",
-     }}
+     }}*/
      transformOrigin={{
       vertical: "top",
       horizontal: "center",
      }}
     >
-     <div style={popoverContentStyle}>
-      <IconButton Style={{ position: "absolute", top: 10, right: 10 }}>
+     <div style={{ padding: "1rem", width: "300px" }}>
+      <IconButton
+       Style={{ position: "absolute", top: 10, right: 10 }}
+       /*onClick={handleClosePopover}*/
+       onClick={() => console.log("Popover close")}
+      >
        <CloseIcon />
       </IconButton>
       <Typography
@@ -195,18 +276,81 @@ const Home = () => {
         onChange={(e) => setSelectedCode(e.target.value)}
         variant="outlined"
         style={{ marginRight: "1rem", width: "30%" }}
-        fullWidth
-        placeholder="Enter mobile number"
-        sx={{ mb: 2 }}
        >
-        {countryCodes.map((option) => (
+        {countryCode.map((option) => (
          <MenuItem key={option.code} value={option.code}>
           {option.label}({option.code})
          </MenuItem>
         ))}
        </TextField>
-       }
+       <TextField
+        label="Phone Number"
+        value={phoneNumber}
+        onChange={(e) => setPhoneNumber(e.target.value)}
+        variant="outlined"
+        fullWidth
+        placeholder="Enter phone number"
+       ></TextField>
       </div>
+      {otpSent && (
+       <>
+        <TextField
+         label="Enter OTP"
+         value={otp}
+         onChange={(e) => setOtp(e.target.value)}
+         variant="outlined"
+         fullWidth
+         style={{ marginBottom: "1rem" }}
+        />
+        <Typography
+         variant="body2"
+         style={{ marginBottom: "1rem", textAlign: "center" }}
+        >
+         {`Time remaining: ${timer} seconds`}
+        </Typography>
+       </>
+      )}
+
+      {otpSent ? (
+       <>
+        <Button
+         variant="contained"
+         color="primary"
+         onClick={handleVerifyOTP}
+         fullWidth
+         style={{ backgroundColor: "green", marginBottom: "1rem" }}
+        >
+         Verify OTP
+        </Button>
+        {timer === 0 && (
+         <Button
+          variant="outlined"
+          color="secondary"
+          onClick={handleResendOTP}
+          disabled={resendDisabled}
+          fullWidth
+         >
+          Resend OTP
+         </Button>
+        )}
+       </>
+      ) : (
+       <Button
+        variant="contained"
+        color="primary"
+        onClick={handleSendOTP}
+        fullWidth
+        style={{ backgroundColor: "green", marginBottom: "1rem" }}
+       >
+        Send OTP
+       </Button>
+      )}
+
+      {otpVerified && (
+       <Typography variant="body1" color="green">
+        OTP Verified!
+       </Typography>
+      )}
 
       {showPopover && <CartPopover />}
      </div>
