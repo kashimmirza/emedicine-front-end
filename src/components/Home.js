@@ -34,8 +34,9 @@ const Home = () => {
  const [suggestions, setSuggestions] = useState([]);
  const [isFocused, setIsFocused] = useState(false);
  const medicine = ["Napa", "Paracetamol", "Aspirin", "Ibuprofen", "Cetirizine"];
- const [anchorEl, setAnchorEl] = useState(null);
  const [showPopover, setShowPopover] = useState(false);
+ const [anchorEl, setAnchorEl] = useState(null);
+
  const [showCartPopover, setShowCartPopover] = useState(false);
  const [phoneNumber, setPhoneNumber] = useState("");
  const [selectedCode, setSelectedCode] = useState("+880");
@@ -234,18 +235,13 @@ const Home = () => {
 
     <Popover
      id={id}
-     open={true}
-     onclose={() => {}}
-     anchorOrin={{
-      vertical: "bottom",
-      horizontal: "center",
-     }}
-     /*anchorEl={anchorEl}
+     open={showPopover}
+     anchorEl={anchorEl}
      onClose={handleClosePopover}
      anchorOrigin={{
       vertical: "bottom",
       horizontal: "center",
-     }}*/
+     }}
      transformOrigin={{
       vertical: "top",
       horizontal: "center",
@@ -254,8 +250,7 @@ const Home = () => {
      <div style={{ padding: "1rem", width: "300px" }}>
       <IconButton
        Style={{ position: "absolute", top: 10, right: 10 }}
-       /*onClick={handleClosePopover}*/
-       onClick={() => console.log("Popover close")}
+       onClick={handleClosePopover}
       >
        <CloseIcon />
       </IconButton>
